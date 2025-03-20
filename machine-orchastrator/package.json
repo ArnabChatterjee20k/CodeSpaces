@@ -1,0 +1,17 @@
+{
+  "name": "machine-orchastrator",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-auto-scaling": "^3.758.0",
+    "@hono/node-server": "^1.13.8",
+    "aws-cdk": "^2.1005.0",
+    "hono": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "tsx": "^4.7.1"
+  }
+}
