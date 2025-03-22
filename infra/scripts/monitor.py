@@ -1,6 +1,15 @@
-import subprocess
+import subprocess, os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
+import redis
+
+REDIS_URI = os.environ.get("REDIS_URI")
+INSTANCE_ID = os.environ.get("EC2_INSTANCE_ID")
+def get_cache():
+    return redis.Redis.from_url(REDIS_URI, decode_responses=True)
+
+def remove_from_cache():
+    cache = get_cache()
 
 # Docker commands
 GET_ID_COMMAND = 'docker ps --filter "ancestor=codercom/code-server" --format "{{.ID}}"'

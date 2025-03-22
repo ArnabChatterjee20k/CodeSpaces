@@ -6,9 +6,11 @@
   },
   "dependencies": {
     "@aws-sdk/client-auto-scaling": "^3.758.0",
+    "@aws-sdk/client-cloudwatch": "^3.772.0",
     "@hono/node-server": "^1.13.8",
     "aws-cdk": "^2.1005.0",
-    "hono": "^4.7.4"
+    "hono": "^4.7.4",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
