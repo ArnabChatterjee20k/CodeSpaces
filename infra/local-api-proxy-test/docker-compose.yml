@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  codermon-user1:
+    image: codercom/code-server:latest
+    container_name: codermon-user1
+    command: --auth=none
+    ports:
+      - "3001:8080"
+
+  codermon-user2:
+    image: codercom/code-server:latest
+    container_name: codermon-user2
+    command: --auth=none
+    ports:
+      - "3002:8080"
+
+
+  codermon-master-for-assets:
+    image: codercom/code-server:latest
+    container_name: codermon-master-for-assets
+    command: --auth=none
+    ports:
+      - "3021:8080"
