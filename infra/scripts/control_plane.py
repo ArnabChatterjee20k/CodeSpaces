@@ -7,6 +7,7 @@ from typing import Awaitable, Callable
 from pydantic import BaseModel
 from codermon import monitor_containers, start_static_assert_container
 from utils import get_token
+import os
 
 from cache import (
     initialize_port_pool,
@@ -18,8 +19,8 @@ from cache import (
 from codermon import start_container
 
 # should be set in the .env and a secret key
-X_ORCHASTRATOR_KEY = "TOKEN"
-ORCHASTRATOR_URL = ""
+X_ORCHASTRATOR_KEY = os.environ.get("X_ORCHASTRATOR_KEY")
+ORCHASTRATOR_URL = os.environ.get("ORCHASTRATOR_URL")
 mitm_process = None
 
 from contextlib import asynccontextmanager
