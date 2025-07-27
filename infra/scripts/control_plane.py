@@ -20,7 +20,7 @@ from cache import (
 from codermon import start_container
 
 # should be set in the .env and a secret key
-X_ORCHASTRATOR_KEY = os.environ.get("X_ORCHASTRATOR_KEY")
+X_ORCHASTRATOR_KEY = os.environ.get("X_ORCHASTRATOR_KEY","TOKEN")
 ORCHASTRATOR_URL = os.environ.get("ORCHASTRATOR_URL")
 mitm_process = None
 
@@ -120,7 +120,7 @@ async def report():
                         "container_id": container_id,
                         "port": container.get("port")
                         } 
-                        for container_id,container in containers]
+                        for container_id,container in containers.items()]
     return JSONResponse({
         "count": count,
         "containers": containers_report
