@@ -99,7 +99,7 @@ async def start(payload: ContainerStartModel, request: Request):
     if container_id:
         metadata = await get_container_metadata(container_id)
         if metadata:
-            return JSONResponse({"url": f"{request.base_url.hostname}:5000"}, 200)
+            return JSONResponse({"url": f"{request.base_url.hostname}:5000?token={get_token(payload.user_id)}"}, 200)
 
     port = await get_free_port()
     if not port:
