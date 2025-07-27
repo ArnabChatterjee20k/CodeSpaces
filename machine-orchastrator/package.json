@@ -7,12 +7,16 @@
   "dependencies": {
     "@aws-sdk/client-auto-scaling": "^3.758.0",
     "@aws-sdk/client-cloudwatch": "^3.772.0",
+    "@aws-sdk/client-ec2": "^3.850.0",
     "@hono/node-server": "^1.13.8",
     "aws-cdk": "^2.1005.0",
+    "dotenv": "^17.2.0",
     "hono": "^4.7.4",
+    "jsonwebtoken": "^9.0.2",
     "redis": "^4.7.0"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.11.17",
     "tsx": "^4.7.1"
   }

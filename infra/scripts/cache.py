@@ -108,3 +108,8 @@ async def get_user_id_by_container(container_id: str):
     async with container_cache.session() as session:
         user_id = await session.get(container_id)
         return str(user_id) if user_id else None
+
+async def get_containers():
+    async with container_cache.session() as session:
+        container_ids = await session.keys()
+        return await session.batch_get(container_ids)

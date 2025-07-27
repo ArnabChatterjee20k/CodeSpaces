@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from typing import Awaitable, Callable
 from pydantic import BaseModel
 from codermon import monitor_containers, start_static_assert_container
+from cache import get_containers
 from utils import get_token
 import os
 
@@ -37,17 +38,21 @@ async def lifespan(app: FastAPI):
 
     asyncio.create_task(monitor_containers())
 
-    print("Starting mitmweb...")
-    mitm_process = await asyncio.create_subprocess_exec(
-        "mitmweb",
-        "-s", "proxy.py",
-        "--mode", "regular",  # or 'transparent', 'reverse:<url>', etc.
-        "--listen-port", "5000",
-        "--set", "web_port=5001",
-        stdout=asyncio.subprocess.DEVNULL,
-        stderr=asyncio.subprocess.DEVNULL
-    )
-    print(f"mitmweb started with PID {mitm_process.pid}")
+    # print("Starting mitmweb...")
+    # mitmweb -s proxy.py --mode regular --listen-port 5000 --set web_port=8080 --set block_global=false
+    # mitm_process = await asyncio.create_subprocess_exec(
+    #     "mitmweb",
+    #     "-s", "proxy.py",
+    #     "--mode", "regular",
+    #     "--listen-host", "0.0.0.0",
+    #     "--listen-port", "5000",
+    #     "--set", "web_port=5001",
+    #     "--set", "block_global=false",
+    #     stdout=asyncio.subprocess.DEVNULL,
+    #     stderr=asyncio.subprocess.DEVNULL
+    # )
+
+    # print(f"mitmweb started with PID {mitm_process.pid}")
 
     try:
         yield
@@ -105,3 +110,18 @@ async def start(payload: ContainerStartModel, request: Request):
 
     return JSONResponse({"url": f"{request.base_url.hostname}:5000?token={get_token(payload.user_id)}"}, 200)
 
+
+@control_plane.get("/report")
+async def report():
+    containers:dict = await get_containers()
+    count = len(containers)
+    containers_report = [{  
+                        "user_id": container.get("user"),
+                        "container_id": container_id,
+                        "port": container.get("port")
+                        } 
+                        for container_id,container in containers]
+    return JSONResponse({
+        "count": count,
+        "containers": containers_report
+    })
