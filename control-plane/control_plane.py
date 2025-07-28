@@ -92,6 +92,10 @@ control_plane.add_middleware(
 class ContainerStartModel(BaseModel):
     user_id: str
 
+@control_plane.get("/health")
+async def health():
+    return "ok"
+
 @control_plane.post("/start")
 async def start(payload: ContainerStartModel, request: Request):
     # Check if the user already has an active container
