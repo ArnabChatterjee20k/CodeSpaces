@@ -36,39 +36,7 @@ async def lifespan(app: FastAPI):
         start_static_assert_container()
     )
 
-    # asyncio.create_task(monitor_containers())
-
-    # print("Starting mitmweb...")
-    # # mitmweb -s proxy.py --mode regular --listen-port 5000 --set web_port=8080 --set block_global=false
-    # mitm_process = await asyncio.create_subprocess_exec(
-    #     "mitmweb",
-    #     "-s", "proxy.py",
-    #     "--mode", "regular",
-    #     "--listen-host", "0.0.0.0",
-    #     "--listen-port", "5000",
-    #     "--set", "web_port=5001",
-    #     "--set", "block_global=false",
-    #     stdout=asyncio.subprocess.DEVNULL,
-    #     stderr=asyncio.subprocess.DEVNULL
-    # )
-
-    # print(f"mitmweb started with PID {mitm_process.pid}")
-
-    try:
-        yield
-    finally:
-        # Gracefully shutdown mitmweb
-        if mitm_process:
-            print("Shutting down mitmweb...")
-            mitm_process.terminate()
-            try:
-                await asyncio.wait_for(mitm_process.wait(), timeout=5.0)
-            except asyncio.TimeoutError:
-                print("Timeout. Killing mitmweb...")
-                mitm_process.kill()
-                await mitm_process.wait()
-            print("mitmweb stopped.")
-
+    yield
 control_plane = FastAPI(lifespan=lifespan)
 
 @control_plane.middleware("http")

@@ -8,6 +8,14 @@ APP_USER=$(whoami)
 PYTHON_BIN="/usr/bin/python3.12"
 UV_BIN="$HOME/.local/bin/uv"
 
+if [ ! -f "$HOME/.local/bin/uv" ]; then
+  echo "Installing uv..."
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
+else
+  echo "uv already installed."
+fi
+
 # Create virtual env if not exists
 if [ ! -d "$SCRIPT_DIR/.venv" ]; then
   echo "Creating virtual environment..."
