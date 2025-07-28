@@ -1,47 +1,67 @@
 #!/bin/bash
+# So that the script exits whenever any command fails
 set -e
 
-echo "[*] Installing dependencies..."
-yum update -y
-yum install -y git gcc make zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel \
-               openssl-devel libffi-devel wget curl xz-devel
+# Get the directory where the script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-echo "[*] Installing pyenv..."
-curl https://pyenv.run | bash
+#!/bin/bash
+# So that the script exits whenever any command fails
+set -e
 
-# Add pyenv to PATH for current and future sessions
-export PATH="/root/.pyenv/bin:$PATH"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
+# Get the directory where the script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-# Add to .bashrc for login shells
-echo 'export PATH="/root/.pyenv/bin:$PATH"' >> ~/.bashrc
-echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
+# Install Python 3.12 and related dependencies
+echo "Installing Python 3.12 and dependencies..."
+sudo apt-get update -y
+sudo apt-get install -y python3.12 python3.12-venv python3.12-dev
 
-echo "[*] Installing Python 3.12 via pyenv..."
-pyenv install 3.12.0
-pyenv global 3.12.0
+# Make python3.12 the default python3
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
+sudo update-alternatives --set python3 /usr/bin/python3.12
 
-echo "[*] Verifying Python version..."
-python --version  # should be 3.12.0
+# Install uv (ultra-fast Python package manager)
+echo "Installing uv..."
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.cargo/bin:$PATH"
 
-echo "[*] Installing pip packages..."
-cd /opt/CodeSpaces/control_plane
-pip install --upgrade pip
-pip install -r requirements.txt
+# Ensure we're using Python 3.12 and uv is available
+PYTHON_CMD=$(which python3.12 2>/dev/null || which python3)
+UV_CMD=$(which uv)
 
-echo "[*] Starting FastAPI Control Plane..."
+echo "Using Python: $PYTHON_CMD"
+echo "Using uv: $UV_CMD"
+
+# Verify Python version
+$PYTHON_CMD --version
+
+# Create virtual environment with uv
+echo "Creating virtual environment with uv..."
+$UV_CMD venv .venv --python $PYTHON_CMD
+
+# Activate virtual environment
+source .venv/bin/activate
+
+# Install Python dependencies using uv (much faster than pip)
+echo "Installing dependencies with uv..."
+$UV_CMD pip install -r requirements.txt
+
+# Start mitmproxy (virtual environment is already activated)
+echo "Starting mitmproxy..."
+nohup mitmweb \
+  -s proxy.py \
+  --mode regular \
+  --listen-host 0.0.0.0 \
+  --listen-port 5000 \
+  --set web_port=5001 \
+  --set block_global=false \
+  > proxy.log 2>&1 &
+
+# Start FastAPI (virtual environment is already activated)
+echo "Starting FastAPI..."
 nohup fastapi run control_plane.py --port 8000 > control_plane.log 2>&1 &
 
-echo "[*] Starting mitmproxy..."
-nohup mitmweb \
-    -s proxy.py \
-    --mode regular \
-    --listen-host 0.0.0.0 \
-    --listen-port 5000 \
-    --set web_port=5001 \
-    --set block_global=false \
-    > proxy.log 2>&1 &
-
-echo "[+] All services started successfully."
+echo "Services started. Check proxy.log and control_plane.log for details."
