@@ -36,23 +36,23 @@ async def lifespan(app: FastAPI):
         start_static_assert_container()
     )
 
-    asyncio.create_task(monitor_containers())
+    # asyncio.create_task(monitor_containers())
 
-    print("Starting mitmweb...")
-    # mitmweb -s proxy.py --mode regular --listen-port 5000 --set web_port=8080 --set block_global=false
-    mitm_process = await asyncio.create_subprocess_exec(
-        "mitmweb",
-        "-s", "proxy.py",
-        "--mode", "regular",
-        "--listen-host", "0.0.0.0",
-        "--listen-port", "5000",
-        "--set", "web_port=5001",
-        "--set", "block_global=false",
-        stdout=asyncio.subprocess.DEVNULL,
-        stderr=asyncio.subprocess.DEVNULL
-    )
+    # print("Starting mitmweb...")
+    # # mitmweb -s proxy.py --mode regular --listen-port 5000 --set web_port=8080 --set block_global=false
+    # mitm_process = await asyncio.create_subprocess_exec(
+    #     "mitmweb",
+    #     "-s", "proxy.py",
+    #     "--mode", "regular",
+    #     "--listen-host", "0.0.0.0",
+    #     "--listen-port", "5000",
+    #     "--set", "web_port=5001",
+    #     "--set", "block_global=false",
+    #     stdout=asyncio.subprocess.DEVNULL,
+    #     stderr=asyncio.subprocess.DEVNULL
+    # )
 
-    print(f"mitmweb started with PID {mitm_process.pid}")
+    # print(f"mitmweb started with PID {mitm_process.pid}")
 
     try:
         yield
