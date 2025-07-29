@@ -4,6 +4,8 @@ import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Construct } from 'constructs';
 
 export class InfraStack extends cdk.Stack {
+  // for using vpc across other stacks so that we dont have to use ssm
+  public readonly vpc: ec2.Vpc;
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -18,6 +20,7 @@ export class InfraStack extends cdk.Stack {
         }
       ]
     });
+    this.vpc = vpc
 
     // ✅ Store VPC ID in SSM Parameter Store
     new ssm.StringParameter(this, "VpcIdExport", {

@@ -2,25 +2,16 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as autoScaling from "aws-cdk-lib/aws-autoscaling";
-import * as ssm from "aws-cdk-lib/aws-ssm";
-import { Asset as S3Asset } from "aws-cdk-lib/aws-s3-assets";
 import { Construct } from "constructs";
-import * as path from "path";
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+
+interface ASGStackProps extends cdk.StackProps {
+  vpc: ec2.IVpc;
+}
 
 export class ASGStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: ASGStackProps) {
     super(scope, id, props);
-    // TODO: write monitor script insde src and copy that so that the whole package is copied
-    // or use github
-    // and use requirements.txt instead of manual installation
-    const monitorScriptAsset = new S3Asset(this, "MonitorScript", {
-      path: path.join(__dirname, "../scripts/monitor.py"),
-    });
-
-    const vpc = ec2.Vpc.fromLookup(this, "VpcIdExport", {
-      vpcId: ssm.StringParameter.valueFromLookup(this, "VpcId"),
-    });
+    const vpc = props.vpc;
     // Security Groups
     const securityGroups = new ec2.SecurityGroup(this, "VsCodeServerSG", {
       vpc,
@@ -32,7 +23,20 @@ export class ASGStack extends cdk.Stack {
       ec2.Port.tcp(22),
       "ssh port"
     );
+    // control-plane and the proxy
+    securityGroups.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(8000),
+      "Control Plane port"
+    );
+    securityGroups.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(5000),
+      "Proxy port"
+    );
+
     // 10 containers = 10 ports
+    // TODO: export port 5000 and port 8000
     securityGroups.addIngressRule(
       ec2.Peer.anyIpv4(),
       ec2.Port.tcpRange(8081, 8090),
@@ -42,46 +46,44 @@ export class ASGStack extends cdk.Stack {
     const role = new iam.Role(this, "VsCodeServerRole", {
       assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
     });
-    // SSM role addition for remoate command access
-    const ssmRole = iam.ManagedPolicy.fromAwsManagedPolicyName(
-      "AmazonSSMManagedInstanceCore"
-    );
-    role.addManagedPolicy(ssmRole);
 
-    const s3ObjectPolicy = new iam.PolicyStatement({
-      actions: ["s3:GetObject"],
-      resources: [monitorScriptAsset.bucket.arnForObjects("*")],
-    });
-    role.addToPolicy(s3ObjectPolicy);
-
-    // launch template for the auto scaling
-    const redisUri = ssm.StringParameter.valueFromLookup(this, "redis-uri");
+    // HACK: cat /var/log/cloud-init-output.log in the instance to see what commands ran
+    // or to have a view tail /var/log/cloud-init-output.log -f
     const userData = ec2.UserData.forLinux();
     userData.addCommands(
-      "yum update -y",
-      // we cant install cloud utils here in amazon linux
-      // needed some other ways
-      "yum install -y docker python3 cronie cloud-utils",
-      "service docker start",
-      "usermod -aG docker ec2-user",
-      "systemctl enable docker",
-      // envs
-      "export EC2_INSTANCE_ID=$(ec2metadata --instance-id)",
-      "echo 'export EC2_INSTANCE_ID=$(ec2metadata --instance-id)' >> /etc/profile",  // Persist across reboots
-      `export REDIS_URI=${redisUri}`,
-      `echo 'export REDIS_URI=${redisUri}' >> /etc/profile`,
+      "#!/bin/bash",
+      "set -e",
 
-      // our monitor script to run the docker container monitor
-      `aws s3 cp s3://${monitorScriptAsset.s3BucketName}/${monitorScriptAsset.s3ObjectKey} /home/ec2-user/monitor.py`,
-      `chmod +x /home/ec2-user/monitor.py`,
-      `pip3 install redis`,
+      "sudo apt-get update -y",
+      "sudo apt-get install -y git curl wget software-properties-common",
 
-      // cron job
-      `sudo systemctl start crond`,
-      `sudo systemctl enable crond`,
-      `(crontab -l 2>/dev/null; echo "*/5 * * * * /usr/bin/python3 /home/ec2-user/monitor.py >> /var/log/monitor.log 2>&1") | crontab -`,
-      // Run VSCode Server in Docker
-      "docker pull codercom/code-server"
+      // Install Docker with a timeout of 30 seconds
+      "curl -fsSL https://get.docker.com -o get-docker.sh",
+      "bash get-docker.sh || { echo 'Docker install failed'; exit 1; }",
+
+      // Add ubuntu user to docker group
+      "sudo usermod -aG docker ubuntu",
+
+      "echo '--- Current working directory ---'",
+      "pwd",
+      // cloning to /home/ubuntu/CodeSpaces -> /home/ubuntu is present already
+      "echo '--- Cloning repository ---'",
+      "git clone https://github.com/ArnabChatterjee20k/CodeSpaces /home/ubuntu/CodeSpaces",
+
+      "echo '--- Listing contents of /home/ubuntu/CodeSpaces/control-plane ---'",
+      "ls -la /home/ubuntu/CodeSpaces/control-plane || echo 'control-plane directory missing'",
+
+      "echo '--- Changing ownership ---'",
+      "sudo chown -R ubuntu:ubuntu /home/ubuntu/CodeSpaces",
+
+      "echo '--- Listing contents of /home/ubuntu/CodeSpaces ---'",
+      "ls -la /home/ubuntu/CodeSpaces",
+
+      "echo '--- Making start.sh executable ---'",
+      "sudo chmod +x /home/ubuntu/CodeSpaces/control-plane/start.sh || echo 'start.sh not found'",
+
+      "echo '--- Running start.sh ---'",
+      "bash -c 'cd /home/ubuntu/CodeSpaces/control-plane && ./start.sh || echo start.sh failed'"
     );
 
     const launchTemplate = new ec2.LaunchTemplate(
@@ -89,7 +91,10 @@ export class ASGStack extends cdk.Stack {
       "VsCodeServerTemplate",
       {
         securityGroup: securityGroups,
-        machineImage: ec2.MachineImage.latestAmazonLinux2023(),
+        // ubuntu AMI
+        machineImage: ec2.MachineImage.genericLinux({
+          "us-east-1": "ami-020cba7c55df1f615",
+        }),
         role: role,
         instanceType: new ec2.InstanceType("t2.micro"),
         userData: userData,
@@ -103,8 +108,8 @@ export class ASGStack extends cdk.Stack {
     // create ASG
     const asg = new autoScaling.AutoScalingGroup(this, "VsCodeServerASG", {
       vpc,
-      maxCapacity: 4,
-      minCapacity: 2,
+      maxCapacity: 1,
+      minCapacity: 1,
       // desiredCapacity: 1,
       launchTemplate,
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
@@ -113,6 +118,10 @@ export class ASGStack extends cdk.Stack {
     // get public ip
     new cdk.CfnOutput(this, "VsCodeServer", {
       value: asg.autoScalingGroupName,
+    });
+    asg.scaleOnCpuUtilization("ScaleDownOnLowLoad", {
+      targetUtilizationPercent: 30,
+      cooldown: cdk.Duration.minutes(5),
     });
   }
 }

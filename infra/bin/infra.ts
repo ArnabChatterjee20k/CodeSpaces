@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
-import { RedisStack } from "../lib/redis-stack";
 import { ASGStack } from "../lib/asg-stack";
 import { InfraStack } from "../lib/infra-stack";
 const app = new cdk.App();
@@ -12,9 +11,5 @@ const infraStack = new InfraStack(app, "InfraStack", {
   env
 });
 
-const redisStack = new RedisStack(app, "RedisStack",{env})
-redisStack.addDependency(infraStack);
-
-const asgStack = new ASGStack(app,"ASGStack",{env})
+const asgStack = new ASGStack(app,"ASGStack",{env,vpc:infraStack.vpc})
 asgStack.addDependency(infraStack)
-asgStack.addDependency(redisStack)
