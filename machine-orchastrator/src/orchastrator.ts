@@ -148,6 +148,7 @@ export class Orchastrator {
    */
   public async startSync(interval: number = ONE_MINUTE_MILLISECOND) {
     await this.monitor();
-    setTimeout(this.startSync, interval);
+    // setTimeout(this.startSync.bind(this, interval), interval);
+    setTimeout(()=>this.startSync(), interval);
   }
 }

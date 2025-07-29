@@ -15,7 +15,7 @@ export class ControlPlaneInstance {
   public readonly controlPlaneURL: string;
 
   constructor(public readonly ip: string) {
-    this.controlPlaneURL = `http://${ip}`;
+    this.controlPlaneURL = `http://${ip}:8000`;
   }
 
   public async getReport(): Promise<ContainerReport> {
@@ -29,7 +29,8 @@ export class ControlPlaneInstance {
     const res = await fetch(`${this.controlPlaneURL}/start`, {
       method: "post",
       body: JSON.stringify({ user_id: userToken }),
-      headers: { "X-ORCHASTRATOR_KEY": `${ControlPlane.getToken()}` },
+      headers: { "X-ORCHASTRATOR_KEY": `${ControlPlane.getToken()}`,      "Content-Type": "application/json",
+    },
     });
     return res.json();
   }

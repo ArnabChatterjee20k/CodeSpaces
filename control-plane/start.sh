@@ -3,7 +3,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
-
+# HACK doing at /root/.local/bin since the userdata runs in the sudo
 APP_USER=$(whoami)
 PYTHON_BIN="/usr/bin/python3.12"
 UV_BIN="/root/.local/bin/uv"
