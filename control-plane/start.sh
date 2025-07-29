@@ -6,12 +6,12 @@ cd "$SCRIPT_DIR"
 
 APP_USER=$(whoami)
 PYTHON_BIN="/usr/bin/python3.12"
-UV_BIN="$HOME/.local/bin/uv"
+UV_BIN="/root/.local/bin/uv"
 
-if [ ! -f "$HOME/.local/bin/uv" ]; then
+if [  ! -f "$UV_BIN" ]; then
   echo "Installing uv..."
   curl -LsSf https://astral.sh/uv/install.sh | sh
-  export PATH="$HOME/.local/bin:$PATH"
+  export PATH="/root/.local/bin:$PATH"
 else
   echo "uv already installed."
 fi
