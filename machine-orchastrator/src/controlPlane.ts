@@ -25,7 +25,7 @@ export class ControlPlaneInstance {
     return res.json();
   }
 
-  public async startContainer(userToken: string): Promise<void> {
+  public async startContainer(user_id: string): Promise<Record<string,string>> {
     const res = await fetch(`${this.controlPlaneURL}/start`, {
       method: "post",
       body: JSON.stringify({ user_id: userToken }),
