@@ -43,7 +43,7 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-# --- Create systemd service: control-plane.service ---
+# --- Create systemd service: control-plane.service as root user to access docker containers ---
 sudo tee /etc/systemd/system/control-plane.service > /dev/null <<EOF
 [Unit]
 Description=FastAPI Control Plane Service
@@ -51,7 +51,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=$APP_USER
+User=root
 WorkingDirectory=$SCRIPT_DIR
 ExecStart=$SCRIPT_DIR/.venv/bin/fastapi run control_plane.py --port 8000
 Restart=always
