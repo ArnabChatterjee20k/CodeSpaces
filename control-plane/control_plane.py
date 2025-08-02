@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
         initialize_port_pool(),
         start_static_assert_container()
     )
-
+    asyncio.create_task(monitor_containers())
     yield
 control_plane = FastAPI(lifespan=lifespan)
 
