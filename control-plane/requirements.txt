@@ -38,6 +38,7 @@ mitmproxy-linux==0.12.7
 mitmproxy-rs==0.12.7
 msgpack==1.1.0
 passlib==1.7.4
+prometheus-client==0.22.1
 publicsuffix2==2.20191221
 pyasn1==0.6.1
 pyasn1-modules==0.4.2

@@ -1,0 +1,11 @@
+# https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_config
+# https://github.com/prometheus/prometheus/blob/release-3.5/config/testdata/conf.good.yml
+global:
+  scrape_interval: 4s
+
+scrape_configs:
+  - job_name: scrape-platforms
+    static_configs:
+      - targets: ["192.168.31.172:8000"]
+    authorization:  # ✅ Correct placement
+      credentials_file: /etc/secrets/token.txt

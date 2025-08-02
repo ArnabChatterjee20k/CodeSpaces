@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 from utils import run_command
 from cache import get_user_id_by_container, update_ttl, set_user_container, remove_container_by_id
+from metrics import active_user_container_max_duration, idle_containers_detected_total, container_stop_duration_seconds
 
 # Docker commands
 GET_ID_COMMAND = 'docker ps --filter "ancestor=codercom/code-server" --format "{{.ID}}"'
@@ -122,7 +123,19 @@ async def monitor_container(container_id):
                 user_id = await get_user_id_by_container(container_id)
                 await update_ttl(user_id)
             else:
-                await shutdown_container(container_id)
+                with container_stop_duration_seconds.time():
+                    await shutdown_container(container_id)
+                idle_containers_detected_total.inc()
+                # observing user session duration
+                try:
+                    start = datetime.strptime(start,LOG_FORMAT)
+                    end = datetime.strptime(end,LOG_FORMAT)
+                    duration = (end - start).total_seconds()
+                    if duration>0:
+                        active_user_container_max_duration.observe(duration)
+                except Exception as e:
+                    print(f"Error calculating container usage duration: {e}")
+                    
             
     except Exception as e:
         print(f"Unexpected error in monitor_container: {e}")
