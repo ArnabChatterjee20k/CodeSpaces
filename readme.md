@@ -1,6 +1,6 @@
 # What is this?
 It is a vscode as a service similar to github codespaces. Mainly I built this for learning asgs, instance scaling and deployments
-
+> The cdk stack for orchastrator  is not added since its mostly the api which can be simulated locally easily -> so only the metric server and control plane are deployable
 # VSCode-as-a-Service Architecture
 
 ## 🧠 Overview
