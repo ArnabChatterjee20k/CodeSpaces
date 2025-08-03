@@ -8,19 +8,5 @@ services:
       - ./prometheus-config.yml:/etc/prometheus/prometheus.yml
       # :ro means only read only permission
       - ./secrets/token.txt:/etc/secrets/token.txt:ro
-
-  grafana:
-    image: grafana/grafana-oss
-    container_name: grafana
-    ports:
-      - 3050:3000
-
-    environment:
-      - GF_SECURITY_ADMIN_USER=adminuser
-      - GF_SECURITY_ADMIN_PASSWORD=adminpass
-
-    volumes:
-      - grafana-storage:/var/lib/grafana
-  
-volumes:
-  grafana-storage:
+    env_file:
+      - .env
