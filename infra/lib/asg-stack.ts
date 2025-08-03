@@ -114,6 +114,10 @@ export class ASGStack extends cdk.Stack {
       launchTemplate,
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
     });
+
+    // for usage by service discovery like prometheus server
+    cdk.Tags.of(asg).add("SERVICE_NAME","CONTROL_PLANE")
+
     asg.scaleOnCpuUtilization("CpuScaling", { targetUtilizationPercent: 50 });
     // get public ip
     new cdk.CfnOutput(this, "VsCodeServer", {

@@ -83,7 +83,6 @@ app.get("/", (c) => {
   );
 });
 
-// 🎟️ Token creation
 app.post("/user", async (c) => {
   const body = (await c.req.json()) as User;
   const token = getToken(body);
@@ -91,7 +90,6 @@ app.post("/user", async (c) => {
   return c.json({ token });
 });
 
-// 🔗 Get server URL
 app.get("/server", async (c) => {
   const body = c.req.query();
   const token = body?.token;
