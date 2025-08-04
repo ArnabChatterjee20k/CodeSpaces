@@ -60,6 +60,7 @@ async def validate_orchastrator(request: Request, call_next: Callable[[Request],
 
     headers = request.headers
     if not any([is_valid_metrics_server(headers),is_valid_orchastrator(headers)]):
+        print(headers)
         return JSONResponse("Not orchastrator", 403)
 
     return await call_next(request)
