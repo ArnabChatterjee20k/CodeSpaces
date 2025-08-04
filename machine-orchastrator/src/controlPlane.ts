@@ -28,7 +28,7 @@ export class ControlPlaneInstance {
   public async startContainer(user_id: string): Promise<Record<string,string>> {
     const res = await fetch(`${this.controlPlaneURL}/start`, {
       method: "post",
-      body: JSON.stringify({ user_id: userToken }),
+      body: JSON.stringify({ user_id: user_id }),
       headers: { "X-ORCHASTRATOR_KEY": `${ControlPlane.getToken()}`,      "Content-Type": "application/json",
     },
     });

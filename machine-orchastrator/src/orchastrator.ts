@@ -90,8 +90,7 @@ export class Orchastrator {
       console.log(`${retries > 0 ? `[Retry ${retries}] ` : ''}Getting instance from pool...`);
       const instancePool = await cache.zRange("instancePool", 0, 0);
       console.log("Fetched from pool:", instancePool);
-      const instanceId = instancePool.length ? instancePool[0] : "";
-  
+      const instanceId = instancePool.length ? instancePool[0] : null;
       if (!instanceId) {
         console.warn("No instance ID found in pool.");
         return null;
@@ -99,7 +98,6 @@ export class Orchastrator {
   
       const rawInstance = await cache.hGetAll(`instance:${instanceId}`);
       const fetchedInstance = rawInstance as unknown as CacheInstanceDetails;
-  
       if (!fetchedInstance || Object.keys(fetchedInstance).length === 0) {
         console.warn("Empty instance hash found, retrying...");
         retries++;

@@ -17,7 +17,7 @@ ControlPlane.registerToken(ORCHASTRATOR_TOKEN);
 ASG.setRegion(AWS_REGION);
 
 const orchastrator = new Orchastrator();
-// orchastrator.startSync();
+orchastrator.startSync();
 app.use(cors({origin:"*"}));
 
 app.get("/", (c) => {

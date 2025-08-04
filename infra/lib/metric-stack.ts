@@ -33,7 +33,7 @@ export class MetricStack extends cdk.Stack {
     // http ports
     securityGroups.addIngressRule(
       ec2.Peer.anyIpv4(),
-      ec2.Port.tcp(9000),
+      ec2.Port.tcp(9090),
       "http port"
     );
 
@@ -86,6 +86,8 @@ export class MetricStack extends cdk.Stack {
     userData.addCommands(
       "echo '--- Running docker compose up ---'",
       "cd /home/ubuntu/CodeSpaces/metrics",
+      "touch /home/ubuntu/CodeSpaces/metrics/.env",
+      "chown ubuntu:ubuntu /home/ubuntu/CodeSpaces/metrics/.env",
       "docker compose up -d || echo 'docker compose failed'"
     );
 
