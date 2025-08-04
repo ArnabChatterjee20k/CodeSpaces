@@ -1,24 +1,25 @@
 # https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_config
 # https://github.com/prometheus/prometheus/blob/release-3.5/config/testdata/conf.good.yml
+
+# For authorization to the metric target -> use authorisation key and file under the job name at the scrape config level per job
+
 global:
   scrape_interval: 4s
 
 scrape_configs:
-  # for local
-  # - job_name: scrape-platforms
-  #   static_configs:
-  #     - targets: ["192.168.31.172:8000"]
-  #   authorization:
-  #     credentials_file: /etc/secrets/token.txt
   - job_name: scrape-platforms
+    # to use authorisation for the metric target
+    authorization:
+      credentials_file: /etc/secrets/token.txt
     ec2_sd_configs:
       # access_key, secrey_key will be read from the env
       - region: us-east-1
+        port: 8000
         filters:
           - name: tag:SERVICE_NAME
             values:
               - CONTROL_PLANE
               - ORCHASTRATOR
-        # TODO: the file should be created during the server setup
-        authorization:
-          credentials_file: /etc/secrets/token.txt
+        # HACK: dont use the file here as the authorisation under the sd_configs is used for authorisation to the ec2 sd here instead of the target
+        # authorization:
+        #   credentials_file: /etc/secrets/token.txt
